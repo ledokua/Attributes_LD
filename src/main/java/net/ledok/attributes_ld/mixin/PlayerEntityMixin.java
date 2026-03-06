@@ -63,31 +63,44 @@ public abstract class PlayerEntityMixin extends LivingEntity {
             attackDamageAttribute.removeModifier(id);
         }
 
-        // 2. Check the held item and find the corresponding custom attribute
+        // 2. Process Main Hand
         ItemStack mainHandStack = this.getMainHandItem();
         for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
             String weaponType = entry.getKey();
             TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
-
             if (mainHandStack.is(weaponTag)) {
-                AttributeInstance customAttribute = this.getAttribute(entry.getValue());
-                if (customAttribute != null) {
-                    // 3. Transfer all modifiers from the custom attribute to the vanilla attack damage attribute
-                    for (AttributeModifier modifierToTransfer : customAttribute.getModifiers()) {
-                        // Create a new, namespaced ID to avoid conflicts
-                        ResourceLocation originalId = modifierToTransfer.id();
-                        ResourceLocation newId = ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType + "/" + originalId.getNamespace() + "/" + originalId.getPath());
+                applyModifiersFromAttribute(attackDamageAttribute, entry.getValue(), weaponType, "main_hand");
+                break; // Item can only be one type
+            }
+        }
 
-                        AttributeModifier newModifier = new AttributeModifier(
-                                newId,
-                                modifierToTransfer.amount(),
-                                modifierToTransfer.operation()
-                        );
-                        attackDamageAttribute.addTransientModifier(newModifier);
-                    }
-                }
-                // Found the weapon, no need to check others
-                return;
+        // 3. Process Off-Hand
+        ItemStack offHandStack = this.getOffhandItem();
+        for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
+            String weaponType = entry.getKey();
+            TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
+            if (offHandStack.is(weaponTag)) {
+                applyModifiersFromAttribute(attackDamageAttribute, entry.getValue(), weaponType, "off_hand");
+                break; // Item can only be one type
+            }
+        }
+    }
+
+    private void applyModifiersFromAttribute(AttributeInstance targetAttribute, Holder<Attribute> sourceAttributeHolder, String type, String hand) {
+        if (sourceAttributeHolder == null) return;
+        AttributeInstance sourceAttribute = this.getAttribute(sourceAttributeHolder);
+        if (sourceAttribute != null) {
+            for (AttributeModifier modifierToTransfer : sourceAttribute.getModifiers()) {
+                ResourceLocation originalId = modifierToTransfer.id();
+                // Make the new ID unique to the hand to prevent conflicts
+                ResourceLocation newId = ResourceLocation.fromNamespaceAndPath("attributes_ld", type + "_" + hand + "/" + originalId.getNamespace() + "/" + originalId.getPath());
+
+                AttributeModifier newModifier = new AttributeModifier(
+                        newId,
+                        modifierToTransfer.amount(),
+                        modifierToTransfer.operation()
+                );
+                targetAttribute.addTransientModifier(newModifier);
             }
         }
     }
