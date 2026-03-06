@@ -20,6 +20,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Mixin(Player.class)
@@ -43,44 +45,50 @@ public abstract class PlayerEntityMixin extends LivingEntity {
         super(entityType, world);
     }
 
-    @Inject(method = "tick", at = @At("TAIL"))
-    private void attributes_ld$updateWeaponDamage(CallbackInfo ci) {
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void attributes_ld$updateAttackDamageAttribute(CallbackInfo ci) {
         AttributeInstance attackDamageAttribute = this.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attackDamageAttribute == null) {
             return;
         }
 
-        // Remove all our modifiers first
-        for (String weaponType : WEAPON_ATTRIBUTES.keySet()) {
-            attackDamageAttribute.removeModifier(ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType + "_damage_bonus"));
+        // 1. Remove all modifiers previously added by this mod to prevent stacking
+        List<ResourceLocation> toRemove = new ArrayList<>();
+        for (AttributeModifier modifier : attackDamageAttribute.getModifiers()) {
+            if ("attributes_ld".equals(modifier.id().getNamespace())) {
+                toRemove.add(modifier.id());
+            }
+        }
+        for (ResourceLocation id : toRemove) {
+            attackDamageAttribute.removeModifier(id);
         }
 
+        // 2. Check the held item and find the corresponding custom attribute
         ItemStack mainHandStack = this.getMainHandItem();
-
         for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
             String weaponType = entry.getKey();
-            Holder<Attribute> attributeHolder = entry.getValue();
             TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
 
             if (mainHandStack.is(weaponTag)) {
-                updateAttribute(attackDamageAttribute, attributeHolder, weaponType);
-                break; // Stop after finding the first matching weapon type
+                AttributeInstance customAttribute = this.getAttribute(entry.getValue());
+                if (customAttribute != null) {
+                    // 3. Transfer all modifiers from the custom attribute to the vanilla attack damage attribute
+                    for (AttributeModifier modifierToTransfer : customAttribute.getModifiers()) {
+                        // Create a new, namespaced ID to avoid conflicts
+                        ResourceLocation originalId = modifierToTransfer.id();
+                        ResourceLocation newId = ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType + "/" + originalId.getNamespace() + "/" + originalId.getPath());
+
+                        AttributeModifier newModifier = new AttributeModifier(
+                                newId,
+                                modifierToTransfer.amount(),
+                                modifierToTransfer.operation()
+                        );
+                        attackDamageAttribute.addTransientModifier(newModifier);
+                    }
+                }
+                // Found the weapon, no need to check others
+                return;
             }
-        }
-    }
-
-    private void updateAttribute(AttributeInstance attackDamageAttribute, Holder<Attribute> attributeHolder, String weaponType) {
-        AttributeInstance weaponAttribute = this.getAttribute(attributeHolder);
-        if (weaponAttribute != null) {
-            double attributeValue = weaponAttribute.getValue();
-            double bonusDamage = attributeValue - 100.0;
-
-            AttributeModifier modifier = new AttributeModifier(
-                    ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType + "_damage_bonus"),
-                    bonusDamage,
-                    AttributeModifier.Operation.ADD_VALUE
-            );
-            attackDamageAttribute.addTransientModifier(modifier);
         }
     }
 }

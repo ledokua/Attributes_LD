@@ -4,7 +4,7 @@ import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 
 public class HammerDamageAttribute extends RangedAttribute {
     public HammerDamageAttribute() {
-        super("attribute.name.attributes_ld.hammer_damage", 100.0, 0.0, 10240.0);
+        super("attribute.name.attributes_ld.hammer_damage", 0.0, 0.0, 10240.0);
         this.setSyncable(true);
     }
 }
