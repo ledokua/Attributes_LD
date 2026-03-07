@@ -1,4 +1,13 @@
 {
   "replace": false,
-  "values": []
+  "values": [
+    {
+      "id": "#paladins:great_hammers",
+      "required": false
+    },
+    {
+      "id": "#rpg_series:weapon_type/hammer",
+      "required": false
+    }
+  ]
 }

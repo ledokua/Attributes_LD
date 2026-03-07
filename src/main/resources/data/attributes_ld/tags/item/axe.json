@@ -6,6 +6,14 @@
     "minecraft:netherite_axe",
     "minecraft:golden_axe",
     "minecraft:stone_axe",
-    "minecraft:wooden_axe"
+    "minecraft:wooden_axe",
+    {
+      "id": "#rogues:double_axes",
+      "required": false
+    },
+    {
+      "id": "#rpg_series:weapon_type/double_axe",
+      "required": false
+    }
   ]
 }

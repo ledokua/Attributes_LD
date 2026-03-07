@@ -1,4 +1,13 @@
 {
-  "replace": false,,
-  "values": []
+  "replace": false,
+  "values": [
+    {
+      "id": "#paladins:staves",
+      "required": false
+    },
+    {
+      "id": "#rpg_series:weapon_type/healing_staff",
+      "required": false
+    }
+  ]
 }

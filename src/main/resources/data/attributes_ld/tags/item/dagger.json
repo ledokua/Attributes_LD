@@ -1,5 +1,13 @@
 {
   "replace": false,
-  "values": ["minecraft:wooden_sword"
+  "values": [
+    {
+      "id": "#rogues:daggers",
+      "required": false
+    },
+    {
+      "id": "#rpg_series:weapon_type/dagger",
+      "required": false
+    }
   ]
 }

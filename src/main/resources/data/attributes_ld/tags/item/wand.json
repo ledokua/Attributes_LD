@@ -1,4 +1,13 @@
 {
   "replace": false,
-  "values": []
+  "values": [
+    {
+      "id": "#paladins:wands",
+      "required": false
+    },
+    {
+      "id": "#rpg_series:weapon_type/healing_wand",
+      "required": false
+    }
+  ]
 }
