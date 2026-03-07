@@ -20,12 +20,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 @Mixin(Player.class)
 public abstract class PlayerEntityMixin extends LivingEntity {
+
+    private static final ResourceLocation ATTRIBUTES_LD_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath("attributes_ld", "final_bonus_damage");
 
     private static final Map<String, Holder<Attribute>> WEAPON_ATTRIBUTES = Map.ofEntries(
             Map.entry("dagger", AttributeRegistry.DAGGER_DAMAGE),
@@ -52,56 +53,69 @@ public abstract class PlayerEntityMixin extends LivingEntity {
             return;
         }
 
-        // 1. Remove all modifiers previously added by this mod to prevent stacking
-        List<ResourceLocation> toRemove = new ArrayList<>();
-        for (AttributeModifier modifier : attackDamageAttribute.getModifiers()) {
-            if ("attributes_ld".equals(modifier.id().getNamespace())) {
-                toRemove.add(modifier.id());
-            }
-        }
-        for (ResourceLocation id : toRemove) {
-            attackDamageAttribute.removeModifier(id);
-        }
+        // 1. Remove our modifier from the previous tick
+        attackDamageAttribute.removeModifier(ATTRIBUTES_LD_MODIFIER_ID);
 
-        // 2. Process Main Hand
+        // 2. Get the player's base attack damage for this tick
+        double baseAttackDamage = attackDamageAttribute.getValue();
+        double finalDamage = baseAttackDamage;
+
+        // 3. Apply custom formula for main hand
         ItemStack mainHandStack = this.getMainHandItem();
-        for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
-            String weaponType = entry.getKey();
-            TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
-            if (mainHandStack.is(weaponTag)) {
-                applyModifiersFromAttribute(attackDamageAttribute, entry.getValue(), weaponType, "main_hand");
-                break; // Item can only be one type
-            }
-        }
+        finalDamage = applyCustomFormula(mainHandStack, finalDamage);
 
-        // 3. Process Off-Hand
+        // 4. Apply custom formula for off-hand
         ItemStack offHandStack = this.getOffhandItem();
-        for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
-            String weaponType = entry.getKey();
-            TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
-            if (offHandStack.is(weaponTag)) {
-                applyModifiersFromAttribute(attackDamageAttribute, entry.getValue(), weaponType, "off_hand");
-                break; // Item can only be one type
-            }
+        finalDamage = applyCustomFormula(offHandStack, finalDamage);
+
+        // 5. Calculate the bonus and add it back as a single flat modifier
+        double bonusDamage = finalDamage - baseAttackDamage;
+        if (Math.abs(bonusDamage) > 1.0E-7) { // Avoid adding zero modifiers
+            AttributeModifier modifier = new AttributeModifier(
+                    ATTRIBUTES_LD_MODIFIER_ID,
+                    bonusDamage,
+                    AttributeModifier.Operation.ADD_VALUE
+            );
+            attackDamageAttribute.addTransientModifier(modifier);
         }
     }
 
-    private void applyModifiersFromAttribute(AttributeInstance targetAttribute, Holder<Attribute> sourceAttributeHolder, String type, String hand) {
-        if (sourceAttributeHolder == null) return;
-        AttributeInstance sourceAttribute = this.getAttribute(sourceAttributeHolder);
-        if (sourceAttribute != null) {
-            for (AttributeModifier modifierToTransfer : sourceAttribute.getModifiers()) {
-                ResourceLocation originalId = modifierToTransfer.id();
-                // Make the new ID unique to the hand to prevent conflicts
-                ResourceLocation newId = ResourceLocation.fromNamespaceAndPath("attributes_ld", type + "_" + hand + "/" + originalId.getNamespace() + "/" + originalId.getPath());
+    private double applyCustomFormula(ItemStack itemStack, double currentDamage) {
+        for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
+            String weaponType = entry.getKey();
+            TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
 
-                AttributeModifier newModifier = new AttributeModifier(
-                        newId,
-                        modifierToTransfer.amount(),
-                        modifierToTransfer.operation()
-                );
-                targetAttribute.addTransientModifier(newModifier);
+            if (itemStack.is(weaponTag)) {
+                AttributeInstance attributeInstance = this.getAttribute(entry.getValue());
+                if (attributeInstance != null) {
+                    return calculateCustomDamage(currentDamage, attributeInstance);
+                }
             }
         }
+        return currentDamage;
+    }
+
+    private double calculateCustomDamage(double baseDamage, AttributeInstance attributeInstance) {
+        Collection<AttributeModifier> modifiers = attributeInstance.getModifiers();
+
+        double a = modifiers.stream()
+                .filter(m -> m.operation() == AttributeModifier.Operation.ADD_VALUE)
+                .mapToDouble(AttributeModifier::amount)
+                .sum();
+
+        double b = modifiers.stream()
+                .filter(m -> m.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+                .mapToDouble(AttributeModifier::amount)
+                .sum();
+
+        double t_product = 1.0;
+        for (AttributeModifier modifier : modifiers) {
+            if (modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
+                t_product *= (1.0 + modifier.amount());
+            }
+        }
+
+        // (atk * (1 + b) + a) * t_product
+        return (baseDamage * (1.0 + b) + a) * t_product;
     }
 }
