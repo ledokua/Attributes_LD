@@ -2,6 +2,8 @@ package net.ledok.attributes_ld.registry;
 
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Shulker;
@@ -30,5 +32,7 @@ public class EntityAttributeRegistry {
         FabricDefaultAttributeRegistry.register(EntityType.GHAST, Ghast.createAttributes().add(AttributeRegistry.PROJECTILE_DAMAGE));
         FabricDefaultAttributeRegistry.register(EntityType.BREEZE, Breeze.createAttributes().add(AttributeRegistry.PROJECTILE_DAMAGE));
         FabricDefaultAttributeRegistry.register(EntityType.SHULKER, Shulker.createAttributes().add(AttributeRegistry.PROJECTILE_DAMAGE));
+        FabricDefaultAttributeRegistry.register(EntityType.WITHER, WitherBoss.createAttributes().add(AttributeRegistry.PROJECTILE_DAMAGE));
+        FabricDefaultAttributeRegistry.register(EntityType.ENDER_DRAGON, EnderDragon.createAttributes().add(AttributeRegistry.PROJECTILE_DAMAGE));
     }
 }
