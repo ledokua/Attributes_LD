@@ -3,7 +3,8 @@
   "package": "net.ledok.attributes_ld.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "PlayerEntityMixin"
+    "PlayerEntityMixin",
+    "LivingEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

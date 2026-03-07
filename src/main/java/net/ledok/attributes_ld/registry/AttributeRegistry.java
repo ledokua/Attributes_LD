@@ -20,6 +20,8 @@ public class AttributeRegistry {
     public static final Holder<Attribute> WAND_DAMAGE = registerAttribute("wand_damage", new WandDamageAttribute());
     public static final Holder<Attribute> GLAIVE_DAMAGE = registerAttribute("glaive_damage", new GlaiveDamageAttribute());
     public static final Holder<Attribute> SHIELD_BONUS = registerAttribute("shield_bonus", new ShieldBonusAttribute());
+    public static final Holder<Attribute> PROJECTILE_DAMAGE = registerAttribute("projectile_damage", new ProjectileDamageAttribute());
+
 
     private static Holder<Attribute> registerAttribute(String name, Attribute attribute) {
         return Registry.registerForHolder(
