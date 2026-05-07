@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#rpg_series:weapon_type/spear",
+      "required": false
+    }
+  ]
+}

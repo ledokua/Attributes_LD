@@ -1,38 +1,70 @@
 package net.ledok.attributes_ld.registry;
 
 import net.ledok.attributes_ld.attribute.*;
+import net.ledok.attributes_ld.config.AttributesLdConfig;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+
 public class AttributeRegistry {
-
-    public static final Holder<Attribute> DAGGER_DAMAGE = registerAttribute("dagger_damage", new DaggerDamageAttribute());
-    public static final Holder<Attribute> AXE_DAMAGE = registerAttribute("axe_damage", new AxeDamageAttribute());
-    public static final Holder<Attribute> SPEAR_DAMAGE = registerAttribute("spear_damage", new SpearDamageAttribute());
-    public static final Holder<Attribute> SICKLE_DAMAGE = registerAttribute("sickle_damage", new SickleDamageAttribute());
-    public static final Holder<Attribute> MACE_DAMAGE = registerAttribute("mace_damage", new MaceDamageAttribute());
-    public static final Holder<Attribute> CLAYMORE_DAMAGE = registerAttribute("claymore_damage", new ClaymoreDamageAttribute());
-    public static final Holder<Attribute> HAMMER_DAMAGE = registerAttribute("hammer_damage", new HammerDamageAttribute());
-    public static final Holder<Attribute> STAVE_DAMAGE = registerAttribute("stave_damage", new StaveDamageAttribute());
-    public static final Holder<Attribute> WAND_DAMAGE = registerAttribute("wand_damage", new WandDamageAttribute());
-    public static final Holder<Attribute> GLAIVE_DAMAGE = registerAttribute("glaive_damage", new GlaiveDamageAttribute());
-    public static final Holder<Attribute> SHIELD_BONUS = registerAttribute("shield_bonus", new ShieldBonusAttribute());
-    public static final Holder<Attribute> PROJECTILE_DAMAGE = registerAttribute("projectile_damage", new ProjectileDamageAttribute());
-
+    private static final Map<String, Holder<Attribute>> ATTRIBUTES = new LinkedHashMap<>();
+    private static AttributesLdConfig.ConfigData config;
 
     private static Holder<Attribute> registerAttribute(String name, Attribute attribute) {
-        return Registry.registerForHolder(
+        Holder<Attribute> holder = Registry.registerForHolder(
                 BuiltInRegistries.ATTRIBUTE,
                 ResourceLocation.fromNamespaceAndPath("attributes_ld", name),
                 attribute
         );
+        ATTRIBUTES.put(name, holder);
+        return holder;
+    }
+
+    private static void registerAll() {
+        registerAttribute("dagger_damage", new DaggerDamageAttribute());
+        registerAttribute("axe_damage", new AxeDamageAttribute());
+        registerAttribute("spear_damage", new SpearDamageAttribute());
+        registerAttribute("sickle_damage", new SickleDamageAttribute());
+        registerAttribute("mace_damage", new MaceDamageAttribute());
+        registerAttribute("claymore_damage", new ClaymoreDamageAttribute());
+        registerAttribute("hammer_damage", new HammerDamageAttribute());
+        registerAttribute("stave_damage", new StaveDamageAttribute());
+        registerAttribute("wand_damage", new WandDamageAttribute());
+        registerAttribute("glaive_damage", new GlaiveDamageAttribute());
+        registerAttribute("shield_bonus", new ShieldBonusAttribute());
+        registerAttribute("knuckles_damage", new KnucklesDamageAttribute());
+        registerAttribute("warrior_weapon_damage", new WarriorWeaponDamageAttribute());
+        registerAttribute("rogue_weapon_damage", new RogueWeaponDamageAttribute());
+        registerAttribute("paladin_weapon_damage", new PaladinWeaponDamageAttribute());
+        registerAttribute("archer_melee_damage", new ArcherMeleeDamageAttribute());
+    }
+
+    public static Optional<Holder<Attribute>> get(String name) {
+        return Optional.ofNullable(ATTRIBUTES.get(name));
+    }
+
+    public static boolean isEnabled(String name) {
+        return config != null && config.isEnabled(name);
+    }
+
+    public static Map<String, Holder<Attribute>> getEnabledAttributes() {
+        Map<String, Holder<Attribute>> enabled = new LinkedHashMap<>();
+        for (Map.Entry<String, Holder<Attribute>> entry : ATTRIBUTES.entrySet()) {
+            if (isEnabled(entry.getKey())) {
+                enabled.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return enabled;
     }
 
     public static void register() {
-        // All attributes are registered via their static initializers.
-        // This method is kept to ensure the class is loaded.
+        config = AttributesLdConfig.load();
+        registerAll();
     }
 }

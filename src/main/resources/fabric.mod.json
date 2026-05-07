@@ -3,16 +3,13 @@
   "id": "attributes_ld",
   "version": "${version}",
   "name": "Attributes_LD",
-  "description": "Adds attributes for secific weapon types",
+  "description": "Adds attributes for specific weapon types",
   "authors": [],
   "contact": {},
   "license": "MIT",
   "icon": "assets/attributes_ld/icon.png",
   "environment": "*",
   "entrypoints": {
-    "fabric-datagen": [
-      "net.ledok.attributes_ld.client.AttributesLdModDataGenerator"
-    ],
     "client": [
       "net.ledok.attributes_ld.client.AttributesLdModClient"
     ],

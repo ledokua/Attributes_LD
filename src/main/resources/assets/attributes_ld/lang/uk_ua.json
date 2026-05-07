@@ -20,5 +20,15 @@
   "attribute.name.attributes_ld.glaive_damage": "Шкода від глефи",
   "description.attribute.name.attributes_ld.glaive_damage": "Змінює шкоду, завдану глефами.",
   "attribute.name.attributes_ld.shield_bonus": "Бонус щита",
-  "description.attribute.name.attributes_ld.shield_bonus": "Надає бонус, коли в руках є щит."
+  "description.attribute.name.attributes_ld.shield_bonus": "Надає бонус, коли в руках є щит.",
+  "attribute.name.attributes_ld.knuckles_damage": "Шкода від кастетів",
+  "description.attribute.name.attributes_ld.knuckles_damage": "Змінює шкоду, завдану кастетами.",
+  "attribute.name.attributes_ld.warrior_weapon_damage": "Шкода зброї воїна",
+  "description.attribute.name.attributes_ld.warrior_weapon_damage": "Змінює шкоду зброї типу воїна.",
+  "attribute.name.attributes_ld.rogue_weapon_damage": "Шкода зброї розбійника",
+  "description.attribute.name.attributes_ld.rogue_weapon_damage": "Змінює шкоду зброї типу розбійника.",
+  "attribute.name.attributes_ld.paladin_weapon_damage": "Шкода зброї паладина",
+  "description.attribute.name.attributes_ld.paladin_weapon_damage": "Змінює шкоду зброї типу паладина.",
+  "attribute.name.attributes_ld.archer_melee_damage": "Ближня шкода лучника",
+  "description.attribute.name.attributes_ld.archer_melee_damage": "Змінює ближню шкоду зброї типу лучника."
 }

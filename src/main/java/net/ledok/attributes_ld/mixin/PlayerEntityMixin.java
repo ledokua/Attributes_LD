@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Mixin(Player.class)
@@ -28,19 +29,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     private static final ResourceLocation ATTRIBUTES_LD_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath("attributes_ld", "final_bonus_damage");
 
-    private static final Map<String, Holder<Attribute>> WEAPON_ATTRIBUTES = Map.ofEntries(
-            Map.entry("dagger", AttributeRegistry.DAGGER_DAMAGE),
-            Map.entry("axe", AttributeRegistry.AXE_DAMAGE),
-            Map.entry("spear", AttributeRegistry.SPEAR_DAMAGE),
-            Map.entry("sickle", AttributeRegistry.SICKLE_DAMAGE),
-            Map.entry("mace", AttributeRegistry.MACE_DAMAGE),
-            Map.entry("claymore", AttributeRegistry.CLAYMORE_DAMAGE),
-            Map.entry("hammer", AttributeRegistry.HAMMER_DAMAGE),
-            Map.entry("stave", AttributeRegistry.STAVE_DAMAGE),
-            Map.entry("wand", AttributeRegistry.WAND_DAMAGE),
-            Map.entry("glaive", AttributeRegistry.GLAIVE_DAMAGE),
-            Map.entry("shield", AttributeRegistry.SHIELD_BONUS)
-    );
+    private static Map<TagKey<Item>, String> weaponTagAttributes;
 
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, Level world) {
         super(entityType, world);
@@ -48,6 +37,9 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void attributes_ld$updateAttackDamageAttribute(CallbackInfo ci) {
+        if (weaponTagAttributes == null) {
+            weaponTagAttributes = buildWeaponTagAttributes();
+        }
         AttributeInstance attackDamageAttribute = this.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attackDamageAttribute == null) {
             return;
@@ -81,18 +73,43 @@ public abstract class PlayerEntityMixin extends LivingEntity {
     }
 
     private double applyCustomFormula(ItemStack itemStack, double currentDamage) {
-        for (Map.Entry<String, Holder<Attribute>> entry : WEAPON_ATTRIBUTES.entrySet()) {
-            String weaponType = entry.getKey();
-            TagKey<Item> weaponTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("attributes_ld", weaponType));
-
-            if (itemStack.is(weaponTag)) {
-                AttributeInstance attributeInstance = this.getAttribute(entry.getValue());
+        double damage = currentDamage;
+        for (Map.Entry<TagKey<Item>, String> entry : weaponTagAttributes.entrySet()) {
+            if (itemStack.is(entry.getKey())) {
+                Holder<Attribute> attribute = AttributeRegistry.get(entry.getValue()).orElse(null);
+                if (attribute == null) {
+                    continue;
+                }
+                AttributeInstance attributeInstance = this.getAttribute(attribute);
                 if (attributeInstance != null) {
-                    return calculateCustomDamage(currentDamage, attributeInstance);
+                    damage = calculateCustomDamage(damage, attributeInstance);
                 }
             }
         }
-        return currentDamage;
+        return damage;
+    }
+
+    private static Map<TagKey<Item>, String> buildWeaponTagAttributes() {
+        Map<TagKey<Item>, String> map = new LinkedHashMap<>();
+        for (String attributeId : AttributeRegistry.getEnabledAttributes().keySet()) {
+            if (!AttributeRegistry.isEnabled(attributeId)) {
+                continue;
+            }
+            String tagPath = normalizeAttributeToTagPath(attributeId);
+            ResourceLocation location = ResourceLocation.fromNamespaceAndPath("attributes_ld", tagPath);
+            map.put(TagKey.create(Registries.ITEM, location), attributeId);
+        }
+        return map;
+    }
+
+    private static String normalizeAttributeToTagPath(String attributeId) {
+        if (attributeId.endsWith("_damage")) {
+            return attributeId.substring(0, attributeId.length() - "_damage".length());
+        }
+        if (attributeId.endsWith("_bonus")) {
+            return attributeId.substring(0, attributeId.length() - "_bonus".length());
+        }
+        return attributeId;
     }
 
     private double calculateCustomDamage(double baseDamage, AttributeInstance attributeInstance) {

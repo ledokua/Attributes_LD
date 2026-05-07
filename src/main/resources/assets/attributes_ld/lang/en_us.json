@@ -20,5 +20,15 @@
   "attribute.name.attributes_ld.glaive_damage": "Glaive Damage",
   "description.attribute.name.attributes_ld.glaive_damage": "Modifies damage dealt with glaives.",
   "attribute.name.attributes_ld.shield_bonus": "Shield Bonus",
-  "description.attribute.name.attributes_ld.shield_bonus": "Provides a bonus when a shield is held."
+  "description.attribute.name.attributes_ld.shield_bonus": "Provides a bonus when a shield is held.",
+  "attribute.name.attributes_ld.knuckles_damage": "Knuckles Damage",
+  "description.attribute.name.attributes_ld.knuckles_damage": "Modifies damage dealt with knuckles.",
+  "attribute.name.attributes_ld.warrior_weapon_damage": "Warrior Weapon Damage",
+  "description.attribute.name.attributes_ld.warrior_weapon_damage": "Modifies damage dealt with warrior weapon types.",
+  "attribute.name.attributes_ld.rogue_weapon_damage": "Rogue Weapon Damage",
+  "description.attribute.name.attributes_ld.rogue_weapon_damage": "Modifies damage dealt with rogue weapon types.",
+  "attribute.name.attributes_ld.paladin_weapon_damage": "Paladin Weapon Damage",
+  "description.attribute.name.attributes_ld.paladin_weapon_damage": "Modifies damage dealt with paladin weapon types.",
+  "attribute.name.attributes_ld.archer_melee_damage": "Archer Melee Damage",
+  "description.attribute.name.attributes_ld.archer_melee_damage": "Modifies melee damage dealt with archer weapon types."
 }
